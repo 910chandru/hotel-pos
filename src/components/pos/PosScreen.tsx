@@ -158,10 +158,15 @@ export const PosScreen: React.FC<PosScreenProps> = ({ settings }) => {
     });
 
     const unsubAllItems = onSnapshot(
-      query(collection(db, 'menu_items'), where('active', '==', true)),
+      query(collection(db, 'menu_items')),
       (snapshot) => {
         const items: MenuItem[] = [];
-        snapshot.forEach((doc) => items.push({ id: doc.id, ...doc.data() } as MenuItem));
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.active !== false) {
+            items.push({ id: doc.id, ...data } as MenuItem);
+          }
+        });
         const groupedUnique = groupMenuItemsByItemCode(items);
         setMenuItems(groupedUnique);
         localStorage.setItem('pos_local_menu_items', JSON.stringify(groupedUnique));
@@ -177,8 +182,8 @@ export const PosScreen: React.FC<PosScreenProps> = ({ settings }) => {
     };
   }, [settings?.businessDayStart]);
 
-  // Category-specific Firestore item retrieval using `where('categoryIds', 'array-contains', selectedCategory)`
-  // and clean duplicate-free `ALL` fetch grouped by unique `itemCode`
+  // Category-specific Firestore item retrieval using a single `where('categoryIds', 'array-contains', selectedCategory)`
+  // and an unfiltered query for `ALL` deduplicated by unique `itemCode`
   useEffect(() => {
     const normCategory = (selectedCategory || 'all').trim();
     const lowerCategory = normCategory.toLowerCase();
@@ -192,22 +197,27 @@ export const PosScreen: React.FC<PosScreenProps> = ({ settings }) => {
       lowerCategory === 'cat_dosa_idly';
 
     const firestoreQuery = isAllOrShortcut
-      ? query(collection(db, 'menu_items'), where('active', '==', true))
-      : buildPosMenuItemsQuery(db, normCategory);
+      ? query(collection(db, 'menu_items'))
+      : query(collection(db, 'menu_items'), where('categoryIds', 'array-contains', normCategory));
 
     const unsubCategoryQuery = onSnapshot(
       firestoreQuery,
       (snapshot) => {
         const fetchedItems: MenuItem[] = [];
-        snapshot.forEach((doc) => fetchedItems.push({ id: doc.id, ...doc.data() } as MenuItem));
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.active !== false) {
+            fetchedItems.push({ id: doc.id, ...data } as MenuItem);
+          }
+        });
 
         if (isAllOrShortcut) {
-          // Selecting 'ALL' performs a clean fetch without duplicates by grouping items by their unique itemCode
+          // Selecting 'ALL' performs a query without the categoryIds filter and deduplicates by itemCode
           const source = fetchedItems.length > 0 ? fetchedItems : menuItems;
           setCategoryScopedItems(groupMenuItemsByItemCode(source));
         } else {
-          // Combine Firestore `where('categoryIds', 'array-contains', selectedCategory)` results
-          // with any legacy/offline items matching the category, then group by unique itemCode
+          // Combine Firestore single `where('categoryIds', 'array-contains', selectedCategory)` results
+          // with any legacy/offline items matching the category, then deduplicate by unique itemCode
           const fallbackMatches = menuItems.filter((item) =>
             itemBelongsToCategory(item, normCategory, categories)
           );
@@ -699,15 +709,16 @@ export const PosScreen: React.FC<PosScreenProps> = ({ settings }) => {
   return (
     <div className="w-full h-full max-w-full flex flex-col overflow-hidden bg-slate-100 select-none">
       
-      {/* 1. TOP CATEGORY BAR: Visible across top of POS screen with horizontal scroll */}
-      <div className="w-full bg-white border-b border-slate-200 px-2.5 py-1.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+      {/* 1. TOP CATEGORY BAR: Visible across top of POS screen with native horizontal scroll & snap-mandatory */}
+      <div className="w-full bg-white border-b border-slate-200 px-2.5 py-1.5 flex items-center gap-1.5 overflow-x-auto snap-x snap-mandatory scroll-smooth touch-pan-x no-scrollbar shrink-0">
         <button
           type="button"
-          onClick={() => {
+          onClick={(e) => {
             setSelectedCategory('all');
             setActiveServicePeriod('ALL');
+            e.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
           }}
-          className={`h-7 px-3 rounded text-xs font-bold uppercase tracking-wide whitespace-nowrap transition-colors cursor-pointer border shrink-0 flex items-center gap-1.5 ${
+          className={`snap-start h-8 px-3 rounded text-xs font-bold uppercase tracking-wide whitespace-nowrap transition-colors cursor-pointer border shrink-0 flex items-center gap-1.5 touch-manipulation ${
             selectedCategory === 'all'
               ? 'bg-slate-900 text-amber-400 border-slate-900 font-black'
               : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
@@ -729,14 +740,15 @@ export const PosScreen: React.FC<PosScreenProps> = ({ settings }) => {
             <button
               key={cat.id}
               type="button"
-              onClick={() => {
+              onClick={(e) => {
                 setSelectedCategory(cat.id);
                 if (isTiffinCategory(cat)) setActiveServicePeriod('TIFFIN');
                 else if (isDinnerCategory(cat)) setActiveServicePeriod('DINNER');
                 else if (isLunchCategory(cat)) setActiveServicePeriod('LUNCH');
                 else setActiveServicePeriod('ALL');
+                e.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
               }}
-              className={`h-7 px-3 rounded text-xs font-bold uppercase tracking-wide whitespace-nowrap transition-colors cursor-pointer border shrink-0 flex items-center gap-1.5 ${
+              className={`snap-start h-8 px-3 rounded text-xs font-bold uppercase tracking-wide whitespace-nowrap transition-colors cursor-pointer border shrink-0 flex items-center gap-1.5 touch-manipulation ${
                 isSelected
                   ? 'bg-amber-500 text-slate-950 border-amber-600 font-black'
                   : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
@@ -761,8 +773,11 @@ export const PosScreen: React.FC<PosScreenProps> = ({ settings }) => {
               <button
                 key={cCat.id}
                 type="button"
-                onClick={() => setSelectedCategory(cCat.id)}
-                className={`h-7 px-2.5 rounded text-xs font-bold uppercase tracking-wide whitespace-nowrap transition-colors cursor-pointer border shrink-0 flex items-center gap-1 ${
+                onClick={(e) => {
+                  setSelectedCategory(cCat.id);
+                  e.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+                }}
+                className={`snap-start h-8 px-2.5 rounded text-xs font-bold uppercase tracking-wide whitespace-nowrap transition-colors cursor-pointer border shrink-0 flex items-center gap-1 touch-manipulation ${
                   isSelected
                     ? 'bg-amber-500 text-slate-950 border-amber-600 font-black'
                     : 'bg-amber-50/70 text-amber-900 border-amber-200 hover:bg-amber-100'

@@ -138,8 +138,8 @@ export function deduplicateMenuItems(items: MenuItem[]): MenuItem[] {
 
 /**
  * Builds the Firestore query for POS item retrieval:
- * - When a specific category ID is selected, uses a Firestore `where('categoryIds', 'array-contains', categoryId)` clause.
- * - When 'ALL' (or 'all' / consolidated shortcut) is selected, performs a clean fetch of active menu items.
+ * - When a specific category ID is selected, uses a single Firestore `where('categoryIds', 'array-contains', categoryId)` clause.
+ * - When 'ALL' (or 'all' / consolidated shortcut) is selected, performs a query without this filter.
  */
 export function buildPosMenuItemsQuery(dbInstance: Firestore, selectedCategory: string): Query<DocumentData> {
   const normCategory = (selectedCategory || 'all').trim();
@@ -154,12 +154,11 @@ export function buildPosMenuItemsQuery(dbInstance: Firestore, selectedCategory: 
     lowerCategory === 'cat_dosa_idly';
 
   if (isAllOrConsolidated) {
-    return query(collection(dbInstance, 'menu_items'), where('active', '==', true));
+    return query(collection(dbInstance, 'menu_items'));
   }
 
   return query(
     collection(dbInstance, 'menu_items'),
-    where('active', '==', true),
     where('categoryIds', 'array-contains', normCategory)
   );
 }
