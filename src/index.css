@@ -351,15 +351,37 @@ body.pos-printing {
     letter-spacing: 0.5px;
     text-transform: uppercase; 
   }
+  .restaurant-address,
+  .address-section {
+    font-size: var(--receipt-meta-font-size, 10.5px);
+    line-height: 1.02 !important;
+    margin-bottom: 0px !important;
+    padding-bottom: 0px !important;
+    color: #000;
+  }
+  .restaurant-address div,
+  .address-section div {
+    line-height: 1.02 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .phone-section {
+    font-size: var(--receipt-meta-font-size, 10.5px);
+    line-height: 1.05 !important;
+    margin-top: 1px !important;
+    margin-bottom: 0px !important;
+    color: #000;
+  }
   .header-slogan {
     font-size: var(--receipt-header-font-size, 10.5px);
     font-weight: 600;
-    margin-bottom: 3px;
+    margin-bottom: 2px;
     font-style: italic;
   }
   .contact-info {
     font-size: var(--receipt-meta-font-size, 10px);
-    line-height: 1.35;
+    line-height: 1.05 !important;
+    margin-bottom: 0px !important;
     color: #222;
   }
   .tax-info {
@@ -447,8 +469,8 @@ body.pos-printing {
   .compact-mode .address-section,
   .receipt-compact .restaurant-address,
   .receipt-compact .address-section {
-    margin-bottom: 1px !important;
-    line-height: 1.12 !important;
+    margin-bottom: 0px !important;
+    line-height: 1.0 !important;
   }
   .compact-mode .bill-title,
   .receipt-compact .bill-title {
