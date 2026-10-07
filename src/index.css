@@ -266,7 +266,7 @@ body.pos-printing {
 
   .center { text-align: center; }
   .bold { font-weight: bold; }
-  .header { margin-bottom: 4px; }
+  .header { margin-bottom: 2px; }
   
   /* Centralized Bulletproof Receipt Logo Centering & Scaling */
   .receipt-logo-container {
@@ -347,28 +347,34 @@ body.pos-printing {
   .restaurant-title { 
     font-size: var(--receipt-title-font-size, 15px);
     font-weight: 900; 
-    margin-bottom: 2px; 
+    margin-bottom: 1px !important; 
+    line-height: 1.12 !important;
     letter-spacing: 0.5px;
     text-transform: uppercase; 
   }
   .restaurant-address,
   .address-section {
     font-size: var(--receipt-meta-font-size, 10.5px);
-    line-height: 1.02 !important;
+    line-height: 0.96 !important;
+    margin-top: 0px !important;
     margin-bottom: 0px !important;
+    padding-top: 0px !important;
     padding-bottom: 0px !important;
     color: #000;
   }
   .restaurant-address div,
-  .address-section div {
-    line-height: 1.02 !important;
-    margin: 0 !important;
+  .address-section div,
+  .restaurant-address p,
+  .address-section p {
+    line-height: 0.96 !important;
+    margin-top: 0px !important;
+    margin-bottom: 0px !important;
     padding: 0 !important;
   }
   .phone-section {
     font-size: var(--receipt-meta-font-size, 10.5px);
-    line-height: 1.05 !important;
-    margin-top: 1px !important;
+    line-height: 1.02 !important;
+    margin-top: 0.5px !important;
     margin-bottom: 0px !important;
     color: #000;
   }
@@ -580,6 +586,24 @@ body.pos-printing {
 
 :not(.has-monochrome-logo):not([data-has-monochrome-logo="true"]) > .receipt-logo-monochrome:not(.monochrome-override):not([data-monochrome="true"]) {
   display: none;
+}
+
+.restaurant-address,
+.address-section {
+  line-height: 0.96 !important;
+  margin-top: 0px !important;
+  margin-bottom: 0px !important;
+  padding-top: 0px !important;
+  padding-bottom: 0px !important;
+}
+
+.restaurant-address div,
+.address-section div,
+.restaurant-address p,
+.address-section p {
+  line-height: 0.96 !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* Responsive KOT Display Grid for Mobile Devices & Kitchen Displays */
